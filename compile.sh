@@ -25,7 +25,7 @@ SQLITE3_VERSION="3510100" #3.51.1
 LIBDEFLATE_VERSION="c8c56a20f8f621e6a966b716b31f1dedab6a41e3" #1.25 - see above note about "v" prefixes
 LIBFFI_VERSION="3.4.8"
 
-EXT_PMMPTHREAD_VERSION="6.3.0"
+EXT_PMMPTHREAD_VERSION="main"
 EXT_YAML_VERSION="2.3.0"
 EXT_LEVELDB_VERSION="88071eb1b1eae96af043229104b9d813f7cbe40c" #release not tagged
 EXT_CHUNKUTILS2_VERSION="0.3.5"
@@ -1179,7 +1179,8 @@ function get_pecl_extension {
 cd "$BUILD_DIR/php"
 write_out "PHP" "Downloading additional extensions..."
 
-get_github_extension "pmmpthread" "$EXT_PMMPTHREAD_VERSION" "pmmp" "ext-pmmpthread"
+
+get_github_extension "pmmpthread" "$EXT_PMMPTHREAD_VERSION" "Bedrock-Phanatics" "ext-qthreads"
 
 
 get_github_extension "yaml" "$EXT_YAML_VERSION" "php" "pecl-file_formats-yaml"
