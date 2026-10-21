@@ -1,35 +1,35 @@
 #!/usr/bin/env bash
 # Solo PHP 8.4 (las demas versiones fueron removidas a proposito)
-PHP_VERSIONS=("8.4.16")
+PHP_VERSIONS=("8.4.27")
 
 #### NOTE: Tags with "v" prefixes behave weirdly in the GitHub API. They'll be stripped in some places but not others.
 #### Use commit hashes to avoid this.
 
 
-ZLIB_VERSION="1.3.1"
+ZLIB_VERSION="1.3.2"
 GMP_VERSION="6.3.0"
 
 ### Think twice before updating the minor/major versions of curl.
 ### curl is by far the worst offender when it comes to random
 ### build breakages on updates.
-CURL_VERSION="curl-8_13_0"
+CURL_VERSION="curl-8_23_0"
 
 YAML_VERSION="0.2.5"
 LEVELDB_VERSION="1c7564468b41610da4f498430e795ca4de0931ff" #release not tagged
-LIBXML_VERSION="2.15.1"
-LIBPNG_VERSION="1.6.53"
+LIBXML_VERSION="2.15.2"
+LIBPNG_VERSION="1.6.59"
 LIBJPEG_VERSION="9f"
-OPENSSL_VERSION="3.6.0"
-LIBZIP_VERSION="1.11.4"
-SQLITE3_VERSION="3510100" #3.51.1
+OPENSSL_VERSION="3.6.5"
+LIBZIP_VERSION="1.12.1"
+SQLITE3_VERSION="3540100" #3.54.1
 LIBDEFLATE_VERSION="c8c56a20f8f621e6a966b716b31f1dedab6a41e3" #1.25 - see above note about "v" prefixes
-LIBFFI_VERSION="3.4.8"
+LIBFFI_VERSION="3.8.0"
 
 EXT_PMMPTHREAD_VERSION="main"
 EXT_YAML_VERSION="2.3.0"
 EXT_LEVELDB_VERSION="88071eb1b1eae96af043229104b9d813f7cbe40c" #release not tagged
 EXT_CHUNKUTILS2_VERSION="0.3.5"
-EXT_XDEBUG_VERSION="3.5.0"
+EXT_XDEBUG_VERSION="3.5.3"
 EXT_IGBINARY_VERSION="3.2.16"
 EXT_CRYPTO_VERSION="999b3c7edbc7f8ca4fdeb0bb4bbae488ad0daf07" #release not tagged
 EXT_RECURSIONGUARD_VERSION="0.1.0"
@@ -1033,20 +1033,33 @@ function build_sqlite3 {
 		rm -rf "$sqlite3_dir"
 		write_download
 		download_from_mirror "sqlite-autoconf-$SQLITE3_VERSION.tar.gz" "sqlite3" | tar -zx >> "$DIR/install.log" 2>&1
-		mv sqlite-autoconf-$SQLITE3_VERSION "$sqlite3_dir" >> "$DIR/install.log" 2>&1
+		mv "sqlite-autoconf-$SQLITE3_VERSION" "$sqlite3_dir" >> "$DIR/install.log" 2>&1
+
 		write_configure
 		cd "$sqlite3_dir"
-		LDFLAGS="$LDFLAGS -L${INSTALL_DIR}/lib" CPPFLAGS="$CPPFLAGS -I${INSTALL_DIR}/include" RANLIB=$RANLIB ./configure \
-		--prefix="$INSTALL_DIR" \
-		--disable-dependency-tracking \
-		$EXTRA_FLAGS \
-		$CONFIGURE_FLAGS >> "$DIR/install.log" 2>&1
+
+		LDFLAGS="$LDFLAGS -L${INSTALL_DIR}/lib" \
+		CPPFLAGS="$CPPFLAGS -I${INSTALL_DIR}/include" \
+		RANLIB="$RANLIB" ./configure \
+			--prefix="$INSTALL_DIR" \
+			--disable-dependency-tracking \
+			--enable-threadsafe \
+			--enable-fts5 \
+			--enable-session \
+			--enable-preupdate-hook \
+			--enable-dbstat-vtab \
+			--enable-stmtvt \
+			--enable-column-metadata \
+			$EXTRA_FLAGS \
+			$CONFIGURE_FLAGS >> "$DIR/install.log" 2>&1
+
 		write_compile
-		make -j $THREADS >> "$DIR/install.log" 2>&1 && mark_cache
+		make -j "$THREADS" >> "$DIR/install.log" 2>&1 && mark_cache
 	else
 		write_caching
 		cd "$sqlite3_dir"
 	fi
+
 	write_install
 	make install >> "$DIR/install.log" 2>&1
 	cd ..
