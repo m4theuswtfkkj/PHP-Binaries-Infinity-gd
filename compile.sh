@@ -12,7 +12,7 @@ GMP_VERSION="6.3.0"
 ### Think twice before updating the minor/major versions of curl.
 ### curl is by far the worst offender when it comes to random
 ### build breakages on updates.
-CURL_VERSION="curl-8_23_0"
+CURL_VERSION="curl-8_13_0"
 
 YAML_VERSION="0.2.5"
 LEVELDB_VERSION="1c7564468b41610da4f498430e795ca4de0931ff" #release not tagged
