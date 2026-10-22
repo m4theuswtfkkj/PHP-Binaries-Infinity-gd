@@ -1043,13 +1043,6 @@ function build_sqlite3 {
 		RANLIB="$RANLIB" ./configure \
 			--prefix="$INSTALL_DIR" \
 			--disable-dependency-tracking \
-			--enable-threadsafe \
-			--enable-fts5 \
-			--enable-session \
-			--enable-preupdate-hook \
-			--enable-dbstat-vtab \
-			--enable-stmtvt \
-			--enable-column-metadata \
 			$EXTRA_FLAGS \
 			$CONFIGURE_FLAGS >> "$DIR/install.log" 2>&1
 
