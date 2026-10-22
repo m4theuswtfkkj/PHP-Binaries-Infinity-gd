@@ -60,7 +60,7 @@ add_library(libzip::zip STATIC IMPORTED)
 
 set_target_properties(libzip::zip PROPERTIES
   INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;${_IMPORT_PREFIX}/include"
-  INTERFACE_LINK_LIBRARIES "\$<LINK_ONLY:OpenSSL::Crypto>;\$<LINK_ONLY:ZLIB::ZLIB>"
+  INTERFACE_LINK_LIBRARIES "\$<LINK_ONLY:ZLIB::ZLIB>;\$<LINK_ONLY:OpenSSL::Crypto>"
 )
 
 # Load information for each installed configuration.

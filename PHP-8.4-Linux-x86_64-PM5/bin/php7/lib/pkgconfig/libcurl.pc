@@ -36,6 +36,6 @@ Version: 8.13.0-DEV
 Requires: 
 Requires.private: zlib,openssl
 Libs: -L${libdir} -lcurl 
-Libs.private: -L/home/runner/work/PHP-Binaries-Infinity-gd/PHP-Binaries-Infinity-gd/bin/php7 -lssl -lcrypto -lssl -lcrypto -lz
+Libs.private: -L/home/runner/work/PHP-Binaries-Infinity-gd/PHP-Binaries-Infinity-gd/bin/php7/lib -lssl -lcrypto -lssl -lcrypto -lz
 Cflags: -I${includedir} 
 Cflags.private: -DCURL_STATICLIB
