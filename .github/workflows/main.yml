@@ -18,7 +18,7 @@ jobs:
     uses: ./.github/workflows/main-pm-matrix.yml
     with:
       pm-version-major: 5
-      php-version-base: "8.4"
+      php-version-base: "8.5"
     secrets: inherit
 
   publish-archive-release:
