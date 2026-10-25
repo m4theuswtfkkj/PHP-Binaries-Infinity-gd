@@ -296,12 +296,6 @@ for version in "${PHP_VERSIONS[@]}"; do
 	fi
 done
 
-if [ "$PHP_VERSION" == "" ]; then
-	write_error "Unsupported PHP base version $PHP_VERSION_BASE"
-	write_error "Este build solo soporta PHP 8.4 (ej: -z 8.4)"
-	exit 1
-fi
-
 PHP_VERSION_ID=$(php_version_id "$PHP_VERSION")
 write_out "opt" "Selected PHP $PHP_VERSION ($PHP_VERSION_ID)"
 
