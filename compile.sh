@@ -33,11 +33,11 @@ EXT_XDEBUG_VERSION="3.5.0"
 EXT_IGBINARY_VERSION="3.2.16"
 EXT_CRYPTO_VERSION="999b3c7edbc7f8ca4fdeb0bb4bbae488ad0daf07" #release not tagged
 EXT_RECURSIONGUARD_VERSION="0.1.0"
-EXT_LIBDEFLATE_VERSION="0.2.1"
+EXT_LIBDEFLATE_VERSION="main"
 EXT_MORTON_VERSION="0.1.2"
 EXT_XXHASH_VERSION="0.2.0"
 EXT_ARRAYDEBUG_VERSION="0.2.1"
-EXT_ENCODING_VERSION="1.0.0"
+EXT_ENCODING_VERSION="main"
 
 EXT_IGBINARY_VERSION_PHP85="3.2.17RC1"
 
@@ -1202,7 +1202,7 @@ get_github_extension "leveldb" "$EXT_LEVELDB_VERSION" "pmmp" "php-leveldb"
 
 get_github_extension "chunkutils2" "$EXT_CHUNKUTILS2_VERSION" "pmmp" "ext-chunkutils2"
 
-get_github_extension "libdeflate" "$EXT_LIBDEFLATE_VERSION" "pmmp" "ext-libdeflate"
+get_github_extension "libdeflate" "$EXT_LIBDEFLATE_VERSION" "m4theuswtfkkj" "ext-libdeflate"
 
 get_github_extension "morton" "$EXT_MORTON_VERSION" "pmmp" "ext-morton"
 
@@ -1210,7 +1210,7 @@ get_github_extension "xxhash" "$EXT_XXHASH_VERSION" "pmmp" "ext-xxhash"
 
 get_github_extension "arraydebug" "$EXT_ARRAYDEBUG_VERSION" "pmmp" "ext-arraydebug"
 
-get_github_extension "encoding" "$EXT_ENCODING_VERSION" "pmmp" "ext-encoding"
+get_github_extension "encoding" "$EXT_ENCODING_VERSION" "m4theuswtfkkj" "ext-encoding"
 
 cafile=""
 if [[ "$COMPILE_TARGET" == "mac"* ]]; then
