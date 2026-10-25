@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Solo PHP 8.4 (las demas versiones fueron removidas a proposito)
-PHP_VERSIONS=("8.4.27")
+PHP_VERSIONS=("8.5.12")
 
 #### NOTE: Tags with "v" prefixes behave weirdly in the GitHub API. They'll be stripped in some places but not others.
 #### Use commit hashes to avoid this.
