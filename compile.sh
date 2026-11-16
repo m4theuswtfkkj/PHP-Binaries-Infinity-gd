@@ -1455,7 +1455,7 @@ if [ "$HAVE_OPCACHE" == "yes" ]; then
 	fi
 	echo "opcache.enable=1" >> "$INSTALL_DIR/bin/php.ini"
 	echo "opcache.enable_cli=1" >> "$INSTALL_DIR/bin/php.ini"
-	echo "opcache.lockfile_path=$INSTALL_DIR" >> "$INSTALL_DIR/bin/php.ini"
+	echo "opcache.lockfile_path=." >> "$INSTALL_DIR/bin/php.ini"
 	echo "opcache.save_comments=1" >> "$INSTALL_DIR/bin/php.ini"
 	echo "opcache.validate_timestamps=1" >> "$INSTALL_DIR/bin/php.ini"
 	echo "opcache.revalidate_freq=0" >> "$INSTALL_DIR/bin/php.ini"
