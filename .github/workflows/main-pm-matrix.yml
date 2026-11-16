@@ -13,7 +13,7 @@ on:
         type: string
 
 env:
-  MUSL_CROSS_MAKE_VERSION: 43fcb1e63786b96add78f89d7454709ae0159fa0
+  MUSL_CROSS_MAKE_VERSION: ed0879894142529622e9cf6c74a79a0d92915e47
 
 jobs:
   # ---------------------------------------------------------------------------
