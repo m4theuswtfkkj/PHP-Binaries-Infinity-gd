@@ -1,63 +1,96 @@
-# PHP 8.4 (+FFI) build scripts for PocketMine-MP — fork "Infinity"
+# PHP 8.5 (+FFI) build scripts for iAkunaMC — fork "Infinity"
 
-Este fork compila **solamente PHP 8.4** con **ext-ffi** para 3 targets:
+This fork builds **only PHP 8.5** with **ext-ffi** for the **iAkunaMC** server software (Minecraft Bedrock, based on PocketMine-MP) and 3 targets:
 
-| Target | Comando | Tipo | Runner CI |
+| Target | Command | Type | CI runner |
 |--------|---------|------|-----------|
-| Linux x86_64 | `./compile.sh -t linux64 -j4 -P5 -D` | dinamico (.so + symlinks) | `ubuntu-22.04` |
-| Linux arm64 **Cobalt** (Azure Cobalt 100 / Neoverse N2) | `./compile.sh -t linux-arm64-cobalt -j4 -P5 -D` | dinamico, **nativo** (compilar en un host aarch64) | `ubuntu-22.04-arm` |
-| Android arm64 | `./compile.sh -t android-aarch64 -x -j4 -P5 -D` | **estatico** (musl, cross-compile) | `ubuntu-22.04` |
+| Linux x86_64 | `./compile.sh -t linux64 -j4 -P5 -D` | dynamic (.so + symlinks) | `ubuntu-22.04` |
+| Linux arm64 **Cobalt** (Azure Cobalt 100 / Neoverse N2) | `./compile.sh -t linux-arm64-cobalt -j4 -P5 -D` | dynamic, **native** (build on an aarch64 host) | `ubuntu-22.04-arm` |
+| Android arm64 | `./compile.sh -t android-aarch64 -x -j4 -P5 -D` | **static** (musl, cross-compile) | `ubuntu-22.04` |
 
-Windows y macOS fueron removidos. Las demas versiones de PHP (8.1/8.2/8.3/8.5) tambien.
+Windows and macOS were removed. Other PHP versions (8.1/8.2/8.3/8.4) were removed too. Only PHP 8.5 is built for iAkunaMC.
 
-## FFI
-- `libffi 3.4.8` se compila junto con el resto de librerias y PHP se configura con `--with-ffi`.
-- `php.ini` se genera con `ffi.enable=true` (el default de PHP es `preload`, que **no** funciona desde plugins).
-- FFI queda compilado dentro del binario: no hace falta `extension=ffi`.
-- Compruebalo: `bin/php7/bin/php -m | grep -i ffi`
+## FFI and generated `php.ini`
+- `libffi 3.4.8` is built together with the other libraries and PHP is configured with `--with-ffi`.
+- `php.ini` is generated with `ffi.enable=true` (PHP's default is `preload`, which **does not** work from plugins).
+- FFI is compiled into the binary: no `extension=ffi` is required.
+- OPcache is enabled by default in the CLI (`opcache.enable_cli=1`); JIT is left off by default (`opcache.jit=off`) because it can cause crashes/unstable behavior, but can be enabled in `php.ini`.
+- `xdebug` is included but disabled by default (`xdebug.mode=off`).
+- Check it: `bin/php7/bin/php -m | grep -i ffi`
 
-## Empaquetado: nada de libs .so vacías
-Usa `./package.sh <salida.tar.gz> [dir]` en vez de `tar` a mano. Lo que hace:
+## Libraries (libs) used in the binary
 
-1. Aborta si hay symlinks rotos (una lib que se perdería).
-2. **Convierte las cadenas de symlinks en hardlinks** (`libffi.so -> libffi.so.8 -> libffi.so.8.x.y`:
-   solo el último nombre es un archivo real; los demás apuntan a él). Con hardlinks, todos los nombres
-   son el mismo archivo con contenido completo. Así, aunque el extractor no soporte symlinks
-   (FileZilla, Windows, cPanel...), ninguna `.so` queda vacía ni desaparece: se extrae como archivo
-   normal y `ld` la resuelve igual.
-3. Genera también un **`.zip` gemelo** con el mismo contenido (descarga recomendada para
+The PHP/iAkunaMC binary ships with the following libraries and extensions already compiled and integrated.
+You do not need to install them separately: they travel inside the tarball/zip and `ld` resolves them automatically.
+
+### System libraries (C/C++) used by the binary
+
+| Library | Version | What it is used for in iAkunaMC/PHP |
+|---------|---------|--------------------------------------|
+| zlib | 1.3.2 | Base deflate/gzip compression. Used by PHP and by network/world compression. |
+| GMP | 6.3.0 | Arbitrary-precision arithmetic. Required for Bedrock packet cryptography (RSA/DH and big integers). |
+| OpenSSL | 3.6.5 | TLS/SSL and cryptography. Secure HTTPS connections (curl) and Bedrock packet encryption. |
+| curl | 8.13.0 | HTTP/HTTPS client. Web requests from plugins/server, downloads and API consumption. |
+| libyaml | 0.2.5 | YAML parser/emitter. Reading configuration (server.yml, plugins). |
+| LevelDB | commit `1c756446` | Embedded key-value database. Storage of Bedrock worlds (chunks/regions). |
+| libpng | 1.6.53 | PNG read/write. Image support (gd and plugins). |
+| libjpeg | 9f | JPEG read/write. Image support. |
+| libxml2 | 2.15.1 | XML parser. UPnP and XML manipulation in PHP. |
+| libzip | 1.12.1 | ZIP files. Resource packs and phar files. |
+| SQLite | 3.51.1 | Embedded database. Local data and plugins. |
+| libdeflate | 1.25 (commit `c8c56a20`) | Optimized deflate/gzip/zlib compression. Faster network compression than zlib. |
+| libffi | 3.4.8 | Foreign function interface. Enables `ext-ffi` to call C code from PHP. |
+
+### PHP extensions compiled into the binary
+
+| Extension | Version | What it is used for |
+|-----------|---------|---------------------|
+| pmmpthread (qthreads fork) | main | Threading for PHP ZTS. Source is Bedrock-Phanatics/ext-qthreads, Quark's fork of pmmp/ext-pmmpthread (itself a fork of krakjoe/pthreads). Drop-in replacement: still loaded as `pmmpthread`, API remains in `pmmp\\thread`. Requires PHP 8.4+; adds `ThreadSafeQueue`, faster `Pool`/`Worker` submission and collection, faster `ThreadSafeArray` merges, object creation and connections, plus fixes for crashes/races/deadlocks/leaks; includes sanitizer CI and a benchmark suite. |
+| yaml | 2.3.0 | PHP extension for YAML. Configuration. |
+| leveldb | commit `88071eb1` | PHP extension on top of LevelDB. World access. |
+| chunkutils2 | 0.3.5 | Low-level utilities for chunks and block palettes. |
+| xdebug | 3.5.0 | Debugging/profiling (not recommended for production). |
+| igbinary | 3.2.17RC1 (PHP 8.5) | Fast binary serialization. Passing data between threads. |
+| crypto | commit `999b3c7e` | Bedrock packet encryption (AES and others). |
+| recursionguard | 0.1.0 | Protection against infinite recursion while debugging. |
+| libdeflate | master | PHP bindings for libdeflate, a zlib replacement with significantly better performance. This fork adds whole-buffer decompression APIs for raw DEFLATE/ZLIB/GZIP with single-pass GZIP decompression, dynamic buffer scaling and zip-bomb protection (default 256 MB limit). |
+| morton | 0.1.2 | Packs X/Z (and X/Y/Z) coordinates into integers for PHP array keys. |
+| xxhash | 0.2.0 | Very fast hash (optional, better performance than `hash()`). |
+| arraydebug | 0.2.1 | Debugging hash collisions in arrays. |
+| encoding | master | High-performance raw data encoding/decoding utilities for PHP, superseding pocketmine/binaryutils and pack()/unpack(). Includes ByteBufferReader/Writer, LE/BE/Byte/VarInt and batch array operations (read*/unpack*/write*/pack*); measured 50x-60x faster writes/packs and 7.5x reads/unpacks. Fork increases ByteBufferWriter default buffer from 16 to 256 bytes and adds native batch array functions. |
+| FFI | included in PHP 8.5 | Calling C from PHP (enabled with `ffi.enable=true`). |
+| OPcache (+JIT) | included in PHP 8.5 | Bytecode cache and JIT compilation for better performance. JIT is disabled by default in php.ini. |
+
+> Standard PHP extensions used by iAkunaMC are also compiled: `gd`, `mbstring`, `sockets`, `bcmath`, `calendar`, `ctype`, `dom`, `fileinfo`, `ftp`, `pcntl`, `phar`, `posix`/`shmop`, `simplexml`, `sqlite3` (PDO), `xml`, `zlib`, etc.
+
+## Packaging: no empty .so libs
+
+Use `./package.sh <output.tar.gz> [dir]` instead of `tar` by hand. It does:
+
+1. Aborts if there are broken symlinks (a library that would be lost).
+2. **Converts symlink chains into hardlinks** (`libffi.so -> libffi.so.8 -> libffi.so.8.x.y`:
+   only the last name is a real file; the others point to it). With hardlinks, all names are the
+   same file with full content. So even if your extractor does not support symlinks
+   (FileZilla, Windows, cPanel...), no `.so` ends up empty or missing: it is extracted as a
+   normal file and `ld` resolves it just the same.
+3. Also generates a **twin `.zip`** with the same content (recommended download for
    FileZilla/Windows/cPanel).
-4. Verifica el resultado extrayendo tar y zip en temporales y comparando **sha256 de cada `.so`**
-   contra el original: si alguna quedara vacía o truncada, el build falla en CI y no se publica.
+4. Verifies the result by extracting tar and zip into temp folders and comparing the **sha256 of
+   every `.so`** against the original: if any were empty or truncated, the build fails in CI and
+   is not published.
 
-### Binarios en el repo (rama `binarios`)
-Cada push a `stable` dispara el job `publish-binaries-branch`, que sube los binarios compilados a la
-rama [`binarios`](../binarios): borra los binarios anteriores, sube los nuevos y conserva README y
-workflows. Nada se descarga de releases externos: las libs viajan dentro de los tarballs y no se
-pierde ninguna.
+### Binaries in the repo (`binarios` branch)
+Each push to `stable` triggers the `publish-binaries-branch` job, which uploads the compiled
+binaries to the [`binarios`](../binarios) branch: it deletes the previous binaries, uploads the
+new ones and keeps README and workflows. Nothing is downloaded from external releases: the libs
+travel inside the tarballs and none is lost.
 
-**Al descomprimir**, usa `tar -xzf` o el `.zip`. Cualquiera de los dos conserva todas las libs
-intactas; ya no depende de que tu herramienta soporte symlinks.
+**When extracting**, use `tar -xzf` or the `.zip`. Either one keeps all libs intact; it no longer
+depends on your tool supporting symlinks.
 
 ---
-(Documentacion original de pmmp/PHP-Binaries abajo)
 
-# PHP binaries & PHP build scripts for PocketMine-MP
-[![Build status](https://github.com/pmmp/php-build-scripts/actions/workflows/main.yml/badge.svg)](https://github.com/pmmp/php-build-scripts/actions/workflows/main.yml)
-
-## Prebuilt binaries
-### Actively updated "latest" URLs
-- [PM5 default](https://github.com/pmmp/PHP-Binaries/releases/tag/pm5-latest)
-- [PM5 PHP 8.2](https://github.com/pmmp/PHP-Binaries/releases/tag/pm5-php-8.2-latest) (default for PM 5.10+)
-- [PM5 PHP 8.3](https://github.com/pmmp/PHP-Binaries/releases/tag/pm5-php-8.3-latest) (not officially supported, but works in PM 5.9+)
-- [PM5 PHP 8.4](https://github.com/pmmp/PHP-Binaries/releases/tag/pm5-php-8.4-latest) (not officially supported, but works in PM 5.33+)
-
-### Legacy binaries, no longer updated
-- [PM4 PHP 8.0](https://github.com/pmmp/PHP-Binaries/releases/tag/pm4-php-8.0-latest) (default for PM 4.0+)
-- [PM4 PHP 8.1](https://github.com/pmmp/PHP-Binaries/releases/tag/pm4-php-8.1-latest) (default for PM 4.21+)
-- [PM4 PHP 8.2](https://github.com/pmmp/PHP-Binaries/releases/tag/pm4-php-8.2-latest) (never officially supported, but works in PM 4.12+)
-- [PM5 PHP 8.0](https://github.com/pmmp/PHP-Binaries/releases/tag/pm5-php-8.0-latest) (default for PM 5.0 alpha)
-- [PM5 PHP 8.1](https://github.com/pmmp/PHP-Binaries/releases/tag/pm5-php-8.1-latest) (default for PM 5.0+)
+# Build script reference
 
 ## compile.sh
 
@@ -65,7 +98,7 @@ Bash script used to compile PHP on MacOS and Linux platforms. Make sure you have
 
 ### Recommendations
 - If you're going to use the compiled binary only on the machine you're build it on, remove the `-t` option for best performance - this will allow the script to optimize for the current machine rather than a generic one.
-- [`ext-gd2`](https://www.php.net/manual/en/book.image.php) is NOT included unless the `-g` flag is provided, as PocketMine-MP doesn't need it. However, if your plugins need it, don't forget to enable it using `-g`.
+- [`ext-gd`](https://www.php.net/manual/en/book.image.php) (GD) **is included by default** in this fork, together with `libpng` and `libjpeg`, so image functions are available out of the box. The `-g` flag keeps/enables it (it is already on by default).
 - The `-c` and `-l` options can be used to specify cache folders to speed up recompiling if you're recompiling many times (e.g. to improve the script).
 
 ### Common pitfalls
@@ -94,7 +127,7 @@ Bash script used to compile PHP on MacOS and Linux platforms. Make sure you have
 | -t           | Set target                                                                                                  |
 | -v           | Enable Valgrind support in PHP                                                                              |
 | -x           | Specifies we are doing cross-compile                                                                        |
-| -P           | Set target to the specified major PocketMine-MP version specified (currently only `5` is supported)         |
+| -P           | Set target to the specified major iAkunaMC (PocketMine-MP 5) version specified (currently only `5` is supported)         |
 | -z           | PHP version to build, e.g `8.2` (optional, if not specified, will be auto-selected by PM version)           |
 
 ### Example:
@@ -102,24 +135,7 @@ Bash script used to compile PHP on MacOS and Linux platforms. Make sure you have
 | Target          | Arguments                         |
 |-----------------|-----------------------------------|
 | linux64         | ``-t linux64 -j4 -P5``            |
-| linux64, PM4    | ``-t linux64 -j4 -P4``            |
-| mac64           | ``-t mac-x86-64 -j4 -P5``         |
 | android-aarch64 | ``-t android-aarch64 -x -j4 -P5`` |
-
-## windows-compile-vs.ps1
-
-Uses Visual Studio toolsets to compile PHP binaries on Windows.
-You need to install `git`, `cmake` and Visual Studio 2019 to use this script.
-
-This script doesn't accept parameters, but the following environment variables are influential:
-
-| Variable | Description                                                                                                         |
-| -------- |---------------------------------------------------------------------------------------------------------------------|
-| `PHP_DEBUG_BUILD`  | Disables optimisations and builds PHP with detailed debugging information (useful for debugging segfaults)|
-| `SOURCES_PATH`     | Where to put the downloaded sources for compilation                                                       |
-| `PM_VERSION_MAJOR` | Major version of PocketMine-MP to build for (currently only `5` is supported)                             |
-| `PHP_VERSION_BASE` | PHP version to build, e.g `8.2` (optional, if not specified, will be auto-selected by PM version)         |
-| `PHP_JIT_SUPPORT`  | Whether to compile with OPcache JIT, set to `1` for yes                                                   |
 
 ## For developers: Version info sources
 ### Libraries
@@ -138,14 +154,14 @@ This script doesn't accept parameters, but the following environment variables a
 | [libzip](https://github.com/nih-at/libzip/releases) | Resource packs | |
 | [sqlite3](https://sqlite.org/download.html) | Plugin use only | Hosted at [DependencyMirror](https://github.com/pmmp/DependencyMirror/releases) to avoid service outages |
 | [libdeflate](https://github.com/ebiggers/libdeflate/blob/master/NEWS.md) | Faster alternative to zlib for network use | |
-| [pthreads4w](https://sourceforge.net/projects/pthreads4w/files/) | Needed by ext-pmmpthread on Windows | Hosted at [DependencyMirror](https://github.com/pmmp/DependencyMirror/releases) to avoid service outages |
+| [pthreads4w](https://sourceforge.net/projects/pthreads4w/files/) | Needed by ext-qthreads on Windows | Hosted at [DependencyMirror](https://github.com/pmmp/DependencyMirror/releases) to avoid service outages |
 
 ### PHP & extensions
 
 | Link to package | Needed for | Notes |
 |:----------------|:-----------|:------|
-| [PHP](https://www.php.net/releases/?json&version=8.2) | Everything | Replace 8.2 in the URL with your chosen version |
-| [pmmpthread](https://github.com/pmmp/ext-pmmpthread/releases) | PHP threading | |
+| [PHP](https://www.php.net/releases/?json&version=8.5) | Everything | Replace 8.5 in the URL with your chosen version |
+| [qthreads](https://github.com/Bedrock-Phanatics/ext-qthreads) | PHP threading | Quark's fork of pmmp/ext-pmmpthread (itself a fork of krakjoe/pthreads); drop-in replacement loaded as `pmmpthread` with `pmmp\\thread` API. Requires PHP 8.4+; adds `ThreadSafeQueue`, faster `Pool`/`Worker` submission/collection, faster `ThreadSafeArray` merges/creation/connections, and fixes for crashes/races/deadlocks/leaks. |
 | [yaml](https://github.com/php/pecl-file_formats-yaml/tags) | YAML config parsing | Yes, the mix of - and _ is intentional. Don't ask me. |
 | [leveldb](https://github.com/pmmp/php-leveldb/commits/pmmp-mojang-compatible/) | Bedrock world support | Custom version to provide `LEVELDB_ZLIB_RAW_COMPRESSION` support |
 | [chunkutils2](https://github.com/pmmp/ext-chunkutils2/releases) | `PalettedBlockArray` and other low-level stuff | |
@@ -153,11 +169,11 @@ This script doesn't accept parameters, but the following environment variables a
 | [igbinary](https://github.com/igbinary/igbinary/releases) | Faster serialization, mostly for moving stuff between threads | Non-essential, could be ditched if necessary |
 | [crypto](https://github.com/bukka/php-crypto/tags) | Bedrock packet encryption | |
 | [recursionguard](https://github.com/pmmp/ext-recursionguard/releases) | Debugging | Not needed for production |
-| [libdeflate](https://github.com/pmmp/ext-libdeflate/releases) | Faster network compression | Non-essential but provides significant performance advantage over zlib |
+| [libdeflate](https://github.com/m4theuswtfkkj/ext-libdeflate/releases) | Faster network compression | Fork of pmmp/ext-libdeflate; PHP bindings for libdeflate with significantly better performance than zlib, plus whole-buffer decompression APIs (raw DEFLATE/ZLIB/GZIP), single-pass GZIP decompression, dynamic buffer scaling and zip-bomb protection |
 | [morton](https://github.com/pmmp/ext-morton) | Packing X/Z and X/Y/Z coordinates into ints in a format suitable for PHP array keys | Needed for performance |
 | [xxhash](https://github.com/pmmp/ext-xxhash/releases) | Not currently used | Could be replaced by `hash()` in recent versions of PHP but this extension has much better performance |
 | [arraydebug](https://github.com/pmmp/ext-arraydebug/tags) | Debugging array hash collisions | |
-| [encoding](https://github.com/pmmp/ext-encoding/releases) | Disk & network data encoding & decoding | Significantly faster alternative to [BinaryUtils](https://github.com/pmmp/BinaryUtils) |
+| [encoding](https://github.com/m4theuswtfkkj/ext-encoding/releases) | Disk & network data encoding & decoding | Fork of pmmp/ext-encoding; high-performance encoding/decoding utilities superseding pocketmine/binaryutils and pack()/unpack(), with ByteBufferReader/Writer, LE/BE/Byte/VarInt and batch array operations (50x-60x faster writes/packs, 7.5x reads/unpacks) |
 
 ### Misc
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Solo PHP 8.4 (las demas versiones fueron removidas a proposito)
+# Solo PHP 8.5 (las demas versiones fueron removidas a proposito)
 PHP_VERSIONS=("8.5.12")
 
 #### NOTE: Tags with "v" prefixes behave weirdly in the GitHub API. They'll be stripped in some places but not others.
@@ -87,7 +87,7 @@ function mark_cache {
 	touch "./.compile.sh.cache"
 }
 
-write_out "PocketMine" "PHP compiler for Linux, MacOS and Android"
+write_out "iAkunaMC" "PHP compiler for Linux, MacOS and Android"
 DIR="$(pwd)"
 BASE_BUILD_DIR="$DIR/install_data"
 #libtool and autoconf have a "feature" where it looks for install.sh/install-sh in ./ ../ and ../../
@@ -267,7 +267,7 @@ function php_version_id {
 PREFERRED_PHP_VERSION_BASE=""
 case $PM_VERSION_MAJOR in
 	5)
-		PREFERRED_PHP_VERSION_BASE="8.4"
+		PREFERRED_PHP_VERSION_BASE="8.5"
 		;;
 	"")
 		write_error "Please specify PocketMine-MP major version target with -P (e.g. -P5)"
@@ -1574,5 +1574,5 @@ echo "[empaquetado] 0 bytes limpiados y symlinks rehechos: $(find "$INSTALL_DIR"
 #<<<FIN PASO 4>>>
 
 date >> "$DIR/install.log" 2>&1
-write_out "PocketMine" "You should start the server now using \"./start.sh\"."
-write_out "PocketMine" "If it doesn't work, please send the \"install.log\" file to the Bug Tracker."
+write_out "iAkunaMC" "You should start the server now using \"./start.sh\"."
+write_out "iAkunaMC" "If it doesn't work, please send the \"install.log\" file to the Bug Tracker."

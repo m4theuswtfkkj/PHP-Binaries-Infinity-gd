@@ -4,7 +4,7 @@ on:
   workflow_call:
     inputs:
       pm-version-major:
-        description: 'PocketMine-MP major version'
+        description: 'iAkunaMC (PocketMine-MP 5) major version'
         required: true
         type: number
       php-version-base:
