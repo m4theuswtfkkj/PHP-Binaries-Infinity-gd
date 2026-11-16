@@ -1211,10 +1211,6 @@ get_github_extension "xxhash" "$EXT_XXHASH_VERSION" "pmmp" "ext-xxhash"
 get_github_extension "arraydebug" "$EXT_ARRAYDEBUG_VERSION" "pmmp" "ext-arraydebug"
 
 get_github_extension "encoding" "$EXT_ENCODING_VERSION" "m4theuswtfkkj" "ext-encoding"
-# Fix GCC 15 -Werror=maybe-uninitialized in the encoding fork (TValue result used before init)
-find "$BUILD_DIR/php/ext/encoding" -name "Serializers.h" -print0 2>/dev/null | while IFS= read -r -d '' f; do
-	sed -i 's/TValue result;/TValue result = {0};/g' "$f"
-done
 
 cafile=""
 if [[ "$COMPILE_TARGET" == "mac"* ]]; then
