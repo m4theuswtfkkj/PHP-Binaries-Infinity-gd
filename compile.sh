@@ -37,7 +37,7 @@ EXT_LIBDEFLATE_VERSION="master"
 EXT_MORTON_VERSION="0.1.2"
 EXT_XXHASH_VERSION="0.2.0"
 EXT_ARRAYDEBUG_VERSION="0.2.1"
-EXT_ENCODING_VERSION="master"
+EXT_ENCODING_VERSION="e459faf76b1d75d0d9ae39499a2344bfca45e2a1"
 
 EXT_IGBINARY_VERSION_PHP85="3.2.17RC1"
 
@@ -1455,6 +1455,7 @@ if [ "$HAVE_OPCACHE" == "yes" ]; then
 	fi
 	echo "opcache.enable=1" >> "$INSTALL_DIR/bin/php.ini"
 	echo "opcache.enable_cli=1" >> "$INSTALL_DIR/bin/php.ini"
+	echo "opcache.lockfile_path=$INSTALL_DIR" >> "$INSTALL_DIR/bin/php.ini"
 	echo "opcache.save_comments=1" >> "$INSTALL_DIR/bin/php.ini"
 	echo "opcache.validate_timestamps=1" >> "$INSTALL_DIR/bin/php.ini"
 	echo "opcache.revalidate_freq=0" >> "$INSTALL_DIR/bin/php.ini"
